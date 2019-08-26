@@ -1,7 +1,7 @@
 package message
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 )
@@ -10,5 +10,8 @@ import (
 //
 // GET /api/message
 func GetAllMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprintf(w, "You've hit the /api/message endpoint")
+	dummyMessages := [2]string{"message one", "message two"}
+
+	// Turn our dummyMessages into json & write that json to the ResponseWriter
+	json.NewEncoder(w).Encode(dummyMessages)
 }
