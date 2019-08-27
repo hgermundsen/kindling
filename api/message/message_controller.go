@@ -10,6 +10,9 @@ import (
 //
 // GET /api/message
 func GetAllMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	// Set important header info (tidying up the response sent)
+	w.Header().Set("Content-Type", "application/json")
+
 	// Get all messages fron the repository
 	dummyMessages := FetchAllMessages()
 
