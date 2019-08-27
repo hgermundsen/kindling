@@ -1,6 +1,8 @@
 package message
 
 import (
+	"time"
+
 	"github.com/nchaloult/kindling/db"
 )
 
@@ -75,4 +77,16 @@ func FetchMessageByID(id string) (Message, error) {
 	}
 
 	return output, nil
+}
+
+// InsertMessage inserts the provided message into the db's "message" table
+func InsertMessage(message Message) error {
+	// Execute sql statement
+	_, err := db.GetDB().Exec(`
+		insert into message (title, content, upvotes, downvotes, creation_time)
+		values($1, $2, $3, $4, $5);
+	`, message.Title, message.Content, message.Upvotes, message.Downvotes, time.Now())
+
+	// If anything went wrong, return that; if nothing went wrong, return nil
+	return err
 }

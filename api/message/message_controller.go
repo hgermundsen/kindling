@@ -2,7 +2,6 @@ package message
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 
@@ -41,9 +40,14 @@ func CreateMessage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 		common.ConstructResponse(w, newMessage, err)
 	}
 
-	// For now, just print the struct that we "fit into" to see if that went alright
-	fmt.Println(newMessage)
-	w.WriteHeader(http.StatusNoContent)
-
 	// Insert newMessage into the DB
+	err = InsertMessage(newMessage)
+	if err != nil {
+		//TODO: real error handling
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Everything seemed to go alright. Return 204
+	w.WriteHeader(http.StatusNoContent)
 }
