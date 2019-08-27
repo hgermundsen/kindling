@@ -14,8 +14,14 @@ func GetAllMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	w.Header().Set("Content-Type", "application/json")
 
 	// Get all messages fron the repository
-	dummyMessages := FetchAllMessages()
+	messages, err := FetchAllMessages()
+	if err != nil {
+		// TODO: real error handling
+		// Return 500 if something went wrong
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 
 	// Turn our dummyMessages into json & write that json to the ResponseWriter
-	json.NewEncoder(w).Encode(dummyMessages)
+	json.NewEncoder(w).Encode(messages)
 }
