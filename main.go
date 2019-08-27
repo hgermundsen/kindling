@@ -18,6 +18,7 @@ func main() {
 	// Defining message routes
 	router.GET("/api/message", message.GetAllMessages)
 	router.GET("/api/message/:id", message.GetMessageByID)
+	router.POST("/api/message", message.CreateMessage)
 
 	db.ConnectToDB()
 
