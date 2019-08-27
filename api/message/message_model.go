@@ -14,5 +14,6 @@ type Message struct {
 	Content      string    `json:"content"`
 	Upvotes      int       `json:"upvotes"`
 	Downvotes    int       `json:"downvotes"`
+	Flags        int       `json:"flags"`
 	CreationTime time.Time `json:"creationTime"`
 }

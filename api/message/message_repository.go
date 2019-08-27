@@ -29,6 +29,7 @@ func FetchAllMessages() ([]Message, error) {
 			&curMessage.Content,
 			&curMessage.Upvotes,
 			&curMessage.Downvotes,
+			&curMessage.Flags,
 			&curMessage.CreationTime,
 		)
 
@@ -66,6 +67,7 @@ func FetchMessageByID(id string) (Message, error) {
 			&output.Content,
 			&output.Upvotes,
 			&output.Downvotes,
+			&output.Flags,
 			&output.CreationTime,
 		)
 	}
@@ -83,9 +85,9 @@ func FetchMessageByID(id string) (Message, error) {
 func InsertMessage(message Message) error {
 	// Execute sql statement
 	_, err := db.GetDB().Exec(`
-		insert into message (title, content, upvotes, downvotes, creation_time)
-		values($1, $2, $3, $4, $5);
-	`, message.Title, message.Content, message.Upvotes, message.Downvotes, time.Now())
+		insert into message (title, content, upvotes, downvotes, flags, creation_time)
+		values($1, $2, $3, $4, $5, $6);
+	`, message.Title, message.Content, message.Upvotes, message.Downvotes, message.Flags, time.Now())
 
 	// If anything went wrong, return that; if nothing went wrong, return nil
 	return err
