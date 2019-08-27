@@ -15,7 +15,9 @@ import (
 func main() {
 	router := httprouter.New()
 
+	// Defining message routes
 	router.GET("/api/message", message.GetAllMessages)
+	router.GET("/api/message/:id", message.GetMessageByID)
 
 	db.ConnectToDB()
 
