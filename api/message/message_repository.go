@@ -6,6 +6,28 @@ import (
 	"github.com/nchaloult/kindling/db"
 )
 
+// Repo is a struct that exposes access to the functions defined in this file.
+//
+// Mainly exists for dependency injection, which makes testing very simple.
+type Repo struct {
+	fetchAllMessages func() ([]Message, error)
+	fetchMessageByID func(string) (Message, error)
+	insertMessage    func(Message) error
+}
+
+// NewRepo is the default constructor for the Repo struct
+func NewRepo(
+	fetchAllMessages func() ([]Message, error),
+	fetchMessageByID func(string) (Message, error),
+	insertMessage func(Message) error,
+) *Repo {
+	return &Repo{
+		fetchAllMessages: fetchAllMessages,
+		fetchMessageByID: fetchMessageByID,
+		insertMessage:    insertMessage,
+	}
+}
+
 // FetchAllMessages returns all messages stored in the db
 func FetchAllMessages() ([]Message, error) {
 	// Execute sql statement

@@ -8,11 +8,27 @@ import (
 	"github.com/nchaloult/kindling/common"
 )
 
+func dummyFetchAll() ([]Message, error) {
+	dummyMessage := Message{
+		ID:        1,
+		Title:     "dummy message",
+		Content:   "dummy content. i sure hope this works",
+		Upvotes:   200,
+		Downvotes: 0,
+		Flags:     0,
+	}
+	output := make([]Message, 1)
+	output = append(output, dummyMessage)
+	return output, nil
+}
+
+var repo *Repo = NewRepo(dummyFetchAll, FetchMessageByID, InsertMessage)
+
 // GetAllMessages responds with all messages in the db
 //
 // GET /api/message
 func GetAllMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	messages, err := FetchAllMessages()
+	messages, err := repo.fetchAllMessages()
 	common.ConstructResponse(w, messages, err)
 }
 
