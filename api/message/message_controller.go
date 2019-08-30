@@ -59,7 +59,7 @@ func (c *Controller) CreateMessage(w http.ResponseWriter, r *http.Request, _ htt
 	err = c.repo.insertMessage(newMessage)
 	if err != nil {
 		//TODO: real error handling
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
