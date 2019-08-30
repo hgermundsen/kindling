@@ -8,42 +8,41 @@ import (
 	"github.com/nchaloult/kindling/common"
 )
 
-func dummyFetchAll() ([]Message, error) {
-	dummyMessage := Message{
-		ID:        1,
-		Title:     "dummy message",
-		Content:   "dummy content. i sure hope this works",
-		Upvotes:   200,
-		Downvotes: 0,
-		Flags:     0,
-	}
-	output := make([]Message, 1)
-	output = append(output, dummyMessage)
-	return output, nil
+// Controller is a struct that exposes access to the functions defined in this
+// file.
+//
+// Mainly exists for dependency injection, which makes testing very simple.
+type Controller struct {
+	repo *Repo
 }
 
-var repo *Repo = NewRepo(dummyFetchAll, FetchMessageByID, InsertMessage)
+// NewController is the default constructor for the Controller struct
+func NewController(repo *Repo) *Controller {
+	return &Controller{
+		repo: repo,
+	}
+}
 
 // GetAllMessages responds with all messages in the db
 //
 // GET /api/message
-func GetAllMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	messages, err := repo.fetchAllMessages()
+func (c *Controller) GetAllMessages(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	messages, err := c.repo.fetchAllMessages()
 	common.ConstructResponse(w, messages, err)
 }
 
 // GetMessageByID responds with the message that has the provided id
 //
 // GET /api/message/:id
-func GetMessageByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	message, err := FetchMessageByID(ps.ByName("id"))
+func (c *Controller) GetMessageByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	message, err := c.repo.fetchMessageByID(ps.ByName("id"))
 	common.ConstructResponse(w, message, err)
 }
 
 // CreateMessage inserts a new message into the database from the provided request body
 //
 // POST /api/message
-func CreateMessage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (c *Controller) CreateMessage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// May decide to move lots of the logic in here to other files, like common
 
 	// Create struct that request body will be parsed "into"
@@ -57,7 +56,7 @@ func CreateMessage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	}
 
 	// Insert newMessage into the DB
-	err = InsertMessage(newMessage)
+	err = c.repo.insertMessage(newMessage)
 	if err != nil {
 		//TODO: real error handling
 		w.WriteHeader(http.StatusInternalServerError)

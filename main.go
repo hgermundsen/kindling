@@ -15,10 +15,18 @@ import (
 func main() {
 	router := httprouter.New()
 
+	// Dependency injection for message entity
+	messageRepo := message.NewRepo(
+		message.FetchAllMessages,
+		message.FetchMessageByID,
+		message.InsertMessage,
+	)
+	messageController := message.NewController(messageRepo)
+
 	// Defining message routes
-	router.GET("/api/message", message.GetAllMessages)
-	router.GET("/api/message/:id", message.GetMessageByID)
-	router.POST("/api/message", message.CreateMessage)
+	router.GET("/api/message", messageController.GetAllMessages)
+	router.GET("/api/message/:id", messageController.GetMessageByID)
+	router.POST("/api/message", messageController.CreateMessage)
 
 	db.ConnectToDB()
 
