@@ -1,6 +1,7 @@
 package message
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -74,6 +75,7 @@ var mockConNotFound *Controller = NewController(mockRepoNotFound)
 //
 // https://blog.questionable.services/article/testing-http-handlers-go/
 
+// Test GET /api/message
 func TestGetAllMessages(t *testing.T) {
 	verb := "GET"
 	uri := "/api/message"
@@ -84,6 +86,7 @@ func TestGetAllMessages(t *testing.T) {
 	testEndpointBehavior(
 		t,
 		"GetAllMessages (happy path) - ", verb, uri,
+		nil,
 		mockConHappyPath.GetAllMessages,
 		mockDataHappyPath,
 		200,
@@ -93,22 +96,101 @@ func TestGetAllMessages(t *testing.T) {
 	testEndpointBehavior(
 		t,
 		"GetAllMessages (not found) - ", verb, uri,
+		nil,
 		mockConNotFound.GetAllMessages,
 		"Not Found",
 		404,
 	)
 }
 
+// Test GET /api/message/:id
+func TestGetMessageByID(t *testing.T) {
+	verb := "GET"
+	uri := "/api/message/:id"
+
+	// Get mock data that will be compared against response body
+	mockDataHappyPath, _ := mockFetchMessageByID("dummyId")
+	// Test happy path
+	testEndpointBehavior(
+		t,
+		"GetMessageByID (happy path) - ", verb, uri,
+		nil,
+		mockConHappyPath.GetMessageByID,
+		mockDataHappyPath,
+		200,
+	)
+
+	// Test when no messages exist
+	testEndpointBehavior(
+		t,
+		"GetMessageByID (not found) - ", verb, uri,
+		nil,
+		mockConNotFound.GetMessageByID,
+		nil,
+		404,
+	)
+}
+
+// Test POST /api/message
+func TestCreateMessage(t *testing.T) {
+	verb := "POST"
+	uri := "/api/message"
+
+	mockReqBodyBare := []byte(`{
+"title": "testing title",
+"content": "testing content"
+	}`)
+	// Test happy path
+	testEndpointBehavior(
+		t,
+		"CreateMessage (happy path) - ", verb, uri,
+		mockReqBodyBare,
+		mockConHappyPath.CreateMessage,
+		nil,
+		204,
+	)
+
+	mockReqBodyEmpty := []byte(`{}`)
+	// Test empty request body
+	testEndpointBehavior(
+		t,
+		"CreateMessage (empty request body) - ", verb, uri,
+		mockReqBodyEmpty,
+		mockConHappyPath.CreateMessage,
+		nil,
+		400,
+	)
+
+	mockReqBodyTitleNoContent := []byte(`{
+"title": "testing title"
+	}`)
+	// Test request body w/ title, but no content
+	testEndpointBehavior(
+		t,
+		"CreateMessage (request body w/ title, no content) - ", verb, uri,
+		mockReqBodyTitleNoContent,
+		mockConHappyPath.CreateMessage,
+		nil,
+		400,
+	)
+}
+
 // Helper function that hits an endpoint and tests for the expected status code
 // and response body content
+//
+// This might find its way into common.go
 func testEndpointBehavior(
 	t *testing.T,
 	prefix, verb, uri string,
+	reqBody []byte,
 	mockHandler func(w http.ResponseWriter, r *http.Request, ps httprouter.Params),
 	mockData interface{},
 	wantStatusCode int,
 ) {
-	request, err := http.NewRequest(verb, uri, nil)
+	// "Set" implementation in golang
+	statusCodesNoBodyWhiteList := map[int]bool{204: true, 400: true, 404: true}
+
+	request, err := http.NewRequest(verb, uri, bytes.NewBuffer(reqBody))
 	if err != nil {
 		t.Fatalf("%s%s", prefix, err)
 	}
@@ -121,6 +203,8 @@ func testEndpointBehavior(
 	switch verb {
 	case "GET":
 		router.GET(uri, mockHandler)
+	case "POST":
+		router.POST(uri, mockHandler)
 	default:
 		t.Fatalf("%sdidn't recognize provided HTTP verb: %s", prefix, verb)
 	}
@@ -133,9 +217,10 @@ func testEndpointBehavior(
 		t.Errorf("%sunexpected status code: %d; want: %d", prefix, recorder.Code, wantStatusCode)
 	}
 
-	// If the status code was a 404, then there's no need to look at the
-	// response body, too
-	if wantStatusCode != 404 {
+	// If the status code wasn't in our list of status codes that mean response
+	// bodies don't need to be checked (like 204, 404), then test the response
+	// body
+	if _, present := statusCodesNoBodyWhiteList[wantStatusCode]; !present {
 		// Test response body
 		mockJSON, err := json.Marshal(mockData)
 		if err != nil {

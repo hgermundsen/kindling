@@ -55,6 +55,13 @@ func (c *Controller) CreateMessage(w http.ResponseWriter, r *http.Request, _ htt
 		common.ConstructResponse(w, newMessage, err)
 	}
 
+	// If request body didn't contain at least a title and content, then return
+	// status code 400
+	if newMessage.Title == "" || newMessage.Content == "" {
+		// TODO: real error handling
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+	}
+
 	// Insert newMessage into the DB
 	err = c.repo.insertMessage(newMessage)
 	if err != nil {
