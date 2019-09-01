@@ -1,0 +1,5 @@
+# common
+.DS_Store
+
+# code coverage output from go tool cover
+cover.*
