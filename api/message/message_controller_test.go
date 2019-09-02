@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+
+	"github.com/nchaloult/kindling/common"
 )
 
 // Mock functions
@@ -89,7 +91,7 @@ func TestGetAllMessages(t *testing.T) {
 		nil,
 		mockConHappyPath.GetAllMessages,
 		mockDataHappyPath,
-		200,
+		http.StatusOK,
 	)
 
 	// Test when no messages exist
@@ -98,8 +100,8 @@ func TestGetAllMessages(t *testing.T) {
 		"GetAllMessages (not found) - ", verb, uri,
 		nil,
 		mockConNotFound.GetAllMessages,
-		"Not Found",
-		404,
+		http.StatusText(http.StatusNotFound),
+		http.StatusNotFound,
 	)
 }
 
@@ -117,7 +119,7 @@ func TestGetMessageByID(t *testing.T) {
 		nil,
 		mockConHappyPath.GetMessageByID,
 		mockDataHappyPath,
-		200,
+		http.StatusOK,
 	)
 
 	// Test when no messages exist
@@ -126,8 +128,8 @@ func TestGetMessageByID(t *testing.T) {
 		"GetMessageByID (not found) - ", verb, uri,
 		nil,
 		mockConNotFound.GetMessageByID,
-		nil,
-		404,
+		http.StatusText(http.StatusNotFound),
+		http.StatusNotFound,
 	)
 }
 
@@ -147,7 +149,7 @@ func TestCreateMessage(t *testing.T) {
 		mockReqBodyBare,
 		mockConHappyPath.CreateMessage,
 		nil,
-		204,
+		http.StatusNoContent,
 	)
 
 	mockReqBodyEmpty := []byte(`{}`)
@@ -157,8 +159,8 @@ func TestCreateMessage(t *testing.T) {
 		"CreateMessage (empty request body) - ", verb, uri,
 		mockReqBodyEmpty,
 		mockConHappyPath.CreateMessage,
-		nil,
-		400,
+		common.EMessageMissingRequiredFields,
+		common.ECodes[common.EMessageMissingRequiredFields],
 	)
 
 	mockReqBodyTitleNoContent := []byte(`{
@@ -170,8 +172,22 @@ func TestCreateMessage(t *testing.T) {
 		"CreateMessage (request body w/ title, no content) - ", verb, uri,
 		mockReqBodyTitleNoContent,
 		mockConHappyPath.CreateMessage,
-		nil,
-		400,
+		common.EMessageMissingRequiredFields,
+		common.ECodes[common.EMessageMissingRequiredFields],
+	)
+
+	mockReqBodyInvalidJSON := []byte(`{
+"title": "foo"
+"content": "bar"
+	}`)
+	// Test invalid json
+	testEndpointBehavior(
+		t,
+		"CreateMessage (request body w/ invalid json) - ", verb, uri,
+		mockReqBodyInvalidJSON,
+		mockConHappyPath.CreateMessage,
+		common.EInvalidJSON,
+		common.ECodes[common.EInvalidJSON],
 	)
 }
 
@@ -188,7 +204,7 @@ func testEndpointBehavior(
 	wantStatusCode int,
 ) {
 	// "Set" implementation in golang
-	statusCodesNoBodyWhiteList := map[int]bool{204: true, 400: true, 404: true}
+	statusCodesNoBodyWhiteList := map[int]bool{204: true}
 
 	request, err := http.NewRequest(verb, uri, bytes.NewBuffer(reqBody))
 	if err != nil {
@@ -230,6 +246,11 @@ func testEndpointBehavior(
 		// Stringify and clean up results and expected results
 		got := strings.TrimSpace(recorder.Body.String())
 		want := strings.TrimSpace(string(mockJSON))
+
+		// If mock data was just a string, then get rid of quote marks
+		if string(want[0]) == "\"" && string(want[len(want)-1]) == "\"" {
+			want = want[1 : len(want)-1]
+		}
 
 		if !strings.Contains(got, want) {
 			t.Errorf("%sunexpected response body:\ngot: %s\n\nwant: %s", prefix, got, want)

@@ -2,6 +2,7 @@ package message
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 
@@ -51,22 +52,21 @@ func (c *Controller) CreateMessage(w http.ResponseWriter, r *http.Request, _ htt
 	// Parse the request body & try to "fit it" to newMessage
 	err := json.NewDecoder(r.Body).Decode(&newMessage)
 	if err != nil {
-		//TODO: real error handling
-		common.ConstructResponse(w, newMessage, err)
+		common.ConstructResponse(w, nil, errors.New(common.EInvalidJSON))
+		return
 	}
 
 	// If request body didn't contain at least a title and content, then return
 	// status code 400
 	if newMessage.Title == "" || newMessage.Content == "" {
-		// TODO: real error handling
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		common.ConstructResponse(w, nil, errors.New(common.EMessageMissingRequiredFields))
+		return
 	}
 
 	// Insert newMessage into the DB
 	err = c.repo.insertMessage(newMessage)
 	if err != nil {
-		//TODO: real error handling
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		common.ConstructResponse(w, nil, errors.New(common.EDBInsert))
 		return
 	}
 

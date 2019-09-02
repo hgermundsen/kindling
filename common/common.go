@@ -14,9 +14,19 @@ func ConstructResponse(w http.ResponseWriter, body interface{}, err error) {
 	// Set important header info (tidying up the response sent)
 	w.Header().Set("Content-Type", "application/json")
 
-	// If something went wrong, respond with a 500
+	// If something went wrong, handle based on the custom error message
 	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		switch err.Error() {
+		// 400s
+		case EInvalidJSON:
+			http.Error(w, EInvalidJSON, ECodes[EInvalidJSON])
+		case EMessageMissingRequiredFields:
+			http.Error(w, EMessageMissingRequiredFields, ECodes[EMessageMissingRequiredFields])
+		// 500s
+		case EDBInsert:
+			http.Error(w, EDBInsert, ECodes[EDBInsert])
+		}
+
 		return
 	}
 

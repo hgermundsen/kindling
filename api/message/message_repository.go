@@ -1,8 +1,10 @@
 package message
 
 import (
+	"errors"
 	"time"
 
+	"github.com/nchaloult/kindling/common"
 	"github.com/nchaloult/kindling/db"
 )
 
@@ -33,7 +35,7 @@ func FetchAllMessages() ([]Message, error) {
 	// Execute sql statement
 	rows, err := db.GetDB().Query("select * from message;")
 	if err != nil {
-		return nil, err
+		return nil, errors.New(common.ESQL)
 	}
 	defer rows.Close()
 
@@ -59,7 +61,7 @@ func FetchAllMessages() ([]Message, error) {
 	}
 	err = rows.Err()
 	if err != nil {
-		return nil, err
+		return nil, errors.New(common.ESQL)
 	}
 
 	return output, nil
@@ -72,7 +74,7 @@ func FetchMessageByID(id string) (Message, error) {
 	if err != nil {
 		// TODO: you can't return nil structs, so this is a stand-in solution
 		// refactor this method to return a pointer to Message, maybe?
-		return Message{}, err
+		return Message{}, errors.New(common.ESQL)
 	}
 	defer rows.Close()
 
@@ -97,7 +99,7 @@ func FetchMessageByID(id string) (Message, error) {
 	if err != nil {
 		// TODO: you can't return nil structs, so this is a stand-in solution
 		// refactor this method to return a pointer to Message, maybe?
-		return Message{}, err
+		return Message{}, errors.New(common.ESQL)
 	}
 
 	return output, nil
@@ -112,5 +114,9 @@ func InsertMessage(message Message) error {
 	`, message.Title, message.Content, message.Upvotes, message.Downvotes, message.Flags, time.Now())
 
 	// If anything went wrong, return that; if nothing went wrong, return nil
-	return err
+	if err != nil {
+		return errors.New(common.ESQL)
+	}
+
+	return nil
 }
