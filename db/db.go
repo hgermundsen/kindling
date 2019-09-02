@@ -3,6 +3,10 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"os"
+
+	// Auto-load env vars from .env file
+	_ "github.com/joho/godotenv/autoload"
 )
 
 var db *sql.DB
@@ -12,7 +16,14 @@ var db *sql.DB
 //
 // https://godoc.org/github.com/lib/pq
 func ConnectToDB() {
-	connection, err := sql.Open("postgres", "user=postgres password=pw dbname=postgres sslmode=disable")
+	connectionString := fmt.Sprintf(
+		"user=%s password=%s dbname=%s sslmode=disable",
+		os.Getenv("POSTGRES_USERNAME"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB_NAME"),
+	)
+
+	connection, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		// TODO: real error handling
 		panic(err)
