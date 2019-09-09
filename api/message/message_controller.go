@@ -73,3 +73,18 @@ func (c *Controller) CreateMessage(w http.ResponseWriter, r *http.Request, _ htt
 	// Everything seemed to go alright. Return 204
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// DeleteMessageByID deletes the message that has the provided id from the db
+//
+// DELETE /api/message/:id
+func (c *Controller) DeleteMessageByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Attempt to delete the appropriate message
+	err := c.repo.deleteMessageByID(ps.ByName("id"))
+	if err != nil {
+		common.ConstructResponse(w, nil, err)
+		return
+	}
+
+	// Everything seemed to go alright. Return 204
+	w.WriteHeader(http.StatusNoContent)
+}

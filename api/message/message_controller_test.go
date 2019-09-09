@@ -3,6 +3,7 @@ package message
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -55,18 +56,24 @@ func mockInsertMessage(message Message) error {
 	return nil
 }
 
+func mockDeleteMessageByID(id string) error {
+	return nil
+}
+
 // Mock structs from mock functions
 
 var mockRepoHappyPath *Repo = NewRepo(
 	mockFetchAllMessages,
 	mockFetchMessageByID,
 	mockInsertMessage,
+	mockDeleteMessageByID,
 )
 
 var mockRepoNotFound *Repo = NewRepo(
 	func() ([]Message, error) { return nil, nil },
 	func(string) (Message, error) { return Message{}, nil },
 	func(Message) error { return nil },
+	func(string) error { return errors.New(common.ENotFound) },
 )
 
 var mockConHappyPath *Controller = NewController(mockRepoHappyPath)
@@ -191,6 +198,32 @@ func TestCreateMessage(t *testing.T) {
 	)
 }
 
+// Test DELETE /api/message/:id
+func TestDeleteMessageByID(t *testing.T) {
+	verb := "DELETE"
+	uri := "/api/message/:id"
+
+	// Test happy path
+	testEndpointBehavior(
+		t,
+		"DeleteMessageByID (happy path) - ", verb, uri,
+		nil,
+		mockConHappyPath.DeleteMessageByID,
+		nil,
+		http.StatusNoContent,
+	)
+
+	// Test when message doesn't exist
+	testEndpointBehavior(
+		t,
+		"DeleteMessageByID (not found) - ", verb, uri,
+		nil,
+		mockConNotFound.DeleteMessageByID,
+		http.StatusText(http.StatusNotFound),
+		http.StatusNotFound,
+	)
+}
+
 // Helper function that hits an endpoint and tests for the expected status code
 // and response body content
 //
@@ -221,6 +254,8 @@ func testEndpointBehavior(
 		router.GET(uri, mockHandler)
 	case "POST":
 		router.POST(uri, mockHandler)
+	case "DELETE":
+		router.DELETE(uri, mockHandler)
 	default:
 		t.Fatalf("%sdidn't recognize provided HTTP verb: %s", prefix, verb)
 	}

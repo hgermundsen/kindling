@@ -16,24 +16,25 @@ func ConstructResponse(w http.ResponseWriter, body interface{}, err error) {
 
 	// If something went wrong, handle based on the custom error message
 	if err != nil {
-		switch err.Error() {
-		// 400s
-		case EInvalidJSON:
-			http.Error(w, EInvalidJSON, ECodes[EInvalidJSON])
-		case EMessageMissingRequiredFields:
-			http.Error(w, EMessageMissingRequiredFields, ECodes[EMessageMissingRequiredFields])
-		// 500s
-		case EDBInsert:
-			http.Error(w, EDBInsert, ECodes[EDBInsert])
-		}
+		// switch err.Error() {
+		// // 400s
+		// case EInvalidJSON:
+		// 	http.Error(w, EInvalidJSON, ECodes[EInvalidJSON])
+		// case EMessageMissingRequiredFields:
+		// 	http.Error(w, EMessageMissingRequiredFields, ECodes[EMessageMissingRequiredFields])
+		// // 500s
+		// case EDBInsert:
+		// 	http.Error(w, EDBInsert, ECodes[EDBInsert])
+		// }
 
+		http.Error(w, err.Error(), ECodes[err.Error()])
 		return
 	}
 
 	// If nothing went wrong, but there's no content to respond with, assume
 	// (for now) that we should respond with a 404
 	if body == nil || isZeroOrEmpty(body) {
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		http.Error(w, ENotFound, ECodes[ENotFound])
 		return
 	}
 

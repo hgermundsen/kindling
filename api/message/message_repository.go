@@ -12,9 +12,10 @@ import (
 //
 // Mainly exists for dependency injection, which makes testing very simple.
 type Repo struct {
-	fetchAllMessages func() ([]Message, error)
-	fetchMessageByID func(string) (Message, error)
-	insertMessage    func(Message) error
+	fetchAllMessages  func() ([]Message, error)
+	fetchMessageByID  func(string) (Message, error)
+	insertMessage     func(Message) error
+	deleteMessageByID func(string) error
 }
 
 // NewRepo is the default constructor for the Repo struct
@@ -22,11 +23,13 @@ func NewRepo(
 	fetchAllMessages func() ([]Message, error),
 	fetchMessageByID func(string) (Message, error),
 	insertMessage func(Message) error,
+	deleteMessageByID func(string) error,
 ) *Repo {
 	return &Repo{
-		fetchAllMessages: fetchAllMessages,
-		fetchMessageByID: fetchMessageByID,
-		insertMessage:    insertMessage,
+		fetchAllMessages:  fetchAllMessages,
+		fetchMessageByID:  fetchMessageByID,
+		insertMessage:     insertMessage,
+		deleteMessageByID: deleteMessageByID,
 	}
 }
 
@@ -113,7 +116,37 @@ func InsertMessage(message Message) error {
 		values($1, $2, $3, $4, $5, $6);
 	`, message.Title, message.Content, message.Upvotes, message.Downvotes, message.Flags, time.Now())
 
-	// If anything went wrong, return that; if nothing went wrong, return nil
+	// If anything went wrong, return an sql error;
+	// if nothing went wrong, return nil
+	if err != nil {
+		return errors.New(common.ESQL)
+	}
+
+	return nil
+}
+
+// DeleteMessageByID deletes the message with the provided id from the database
+func DeleteMessageByID(id string) error {
+	// Check for existence of the message before we try to delete.
+	//
+	// The "delete" sql statement won't give us any feedback by itself if what
+	// we are trying to delete doesn't exist; the statement just won't do
+	// anything.
+	rows, err := db.GetDB().Query("select * from message where id=$1;", id)
+	if err != nil {
+		return errors.New(common.ESQL)
+	}
+
+	if !rows.Next() {
+		// The message we're trying to delete doesn't exist in the db
+		return errors.New(common.ENotFound)
+	}
+
+	// Execute sql statement
+	_, err = db.GetDB().Exec(`delete from message where id=$1;`, id)
+
+	// If anything went wrong, return an sql error;
+	// if nothing went wrong, return nil
 	if err != nil {
 		return errors.New(common.ESQL)
 	}

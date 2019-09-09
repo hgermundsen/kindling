@@ -20,6 +20,7 @@ func main() {
 		message.FetchAllMessages,
 		message.FetchMessageByID,
 		message.InsertMessage,
+		message.DeleteMessageByID,
 	)
 	messageController := message.NewController(messageRepo)
 
@@ -27,6 +28,7 @@ func main() {
 	router.GET("/api/message", messageController.GetAllMessages)
 	router.GET("/api/message/:id", messageController.GetMessageByID)
 	router.POST("/api/message", messageController.CreateMessage)
+	router.DELETE("/api/message/:id", messageController.DeleteMessageByID)
 
 	db.ConnectToDB()
 
