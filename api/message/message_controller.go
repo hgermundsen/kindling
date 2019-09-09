@@ -66,7 +66,7 @@ func (c *Controller) CreateMessage(w http.ResponseWriter, r *http.Request, _ htt
 	// Insert newMessage into the DB
 	err = c.repo.insertMessage(newMessage)
 	if err != nil {
-		common.ConstructResponse(w, nil, errors.New(common.EDBInsert))
+		common.ConstructResponse(w, nil, err)
 		return
 	}
 
