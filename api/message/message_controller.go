@@ -6,7 +6,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 
-	"github.com/nchaloult/kindling/common"
+	"kindling/common"
 )
 
 // Controller is a struct that exposes access to the functions defined in this

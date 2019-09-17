@@ -12,7 +12,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/nchaloult/kindling/common"
+	"kindling/common"
 )
 
 // Mock functions
