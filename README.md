@@ -8,6 +8,12 @@ The instructions below aren't very good. They serve more as reminders for me as 
 
 ### Getting Up and Running
 
+First, get your local db stood up by running:
+
+`./init-db.sh`
+
+Then, spin up Postgres and start the app:
+
 1. `docker-compose up -d`
 1. `go run main.go`
 
