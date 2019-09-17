@@ -8,8 +8,8 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/nchaloult/kindling/api/message"
-	"github.com/nchaloult/kindling/db"
+	"kindling/api/message"
+	"kindling/db"
 )
 
 func main() {

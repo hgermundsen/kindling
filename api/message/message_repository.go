@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/nchaloult/kindling/common"
-	"github.com/nchaloult/kindling/db"
+	"kindling/common"
+	"kindling/db"
 )
 
 // Repo is a struct that exposes access to the functions defined in this file.
